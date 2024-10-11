@@ -2,16 +2,16 @@
 
 ![License](https://img.shields.io/badge/license-ISC-brightgreen)
 
-**Moduler** es un paquete para Node.js que permite hacer públicos cualquier paquete de `node_modules` y sirve como un middleware en aplicaciones Express. Esto es útil para facilitar la importación de módulos en el navegador.
+**SIO-Moduler** es un paquete para Node.js que permite hacer públicos cualquier paquete de `node_modules` y sirve como un middleware en aplicaciones Express. Esto es útil para facilitar la importación de módulos en el navegador.
 
-Moduler usa la propiedad exports de los paquetes para generar las rutas que serán utilizadas, en caso de que no exista esta propiedad, se genera usando la propiedad module o la propiedad main, por último si no existe ningúna de estas busca la existencia del archivo "index.js" en el proyecto.
+SIO-Moduler usa la propiedad exports de los paquetes para generar las rutas que serán utilizadas, en caso de que no exista esta propiedad, se genera usando la propiedad module o la propiedad main, por último si no existe ningúna de estas busca la existencia del archivo "index.js" en el proyecto.
 
 ## Instalación
 
-Puedes instalar Moduler a través de npm:
+Puedes instalar SIO-Moduler a través de npm:
 
 ```bash
-npm install moduler
+npm install sio-moduler
 ```
 
 ## Uso
@@ -20,12 +20,12 @@ Una vez instalado, puedes utilizar Moduler en tu aplicación Express de la sigui
 
 ```javascript
 import express from 'express';
-import moduler from 'moduler';
+import moduler from 'sio-moduler';
 
 const app = express();
 const modules = ['nombre-del-modulo']; // Reemplaza por los módulos que quieres exponer
 
-// Utiliza el middleware Moduler
+// Utiliza el middleware SIO-Moduler
 app.use('/modules', moduler(modules));
 
 // Inicia el servidor
@@ -49,9 +49,9 @@ Una vez que hayas configurado tu servidor, puedes importar tus módulos directam
 
 ### Funcionalidades
 
-- **Importación de Módulos:** Moduler redefine las rutas de importación para los archivos que se importan desde `node_modules`, permitiendo que sean accesibles desde el navegador.
+- **Importación de Módulos:** SIO-Moduler redefine las rutas de importación para los archivos que se importan desde `node_modules`, permitiendo que sean accesibles desde el navegador.
   
-- **Soporte para Dependencias:** Moduler también maneja las dependencias de tus módulos y las hace accesibles automáticamente.
+- **Soporte para Dependencias:** SIO-Moduler también maneja las dependencias de tus módulos y las hace accesibles automáticamente.
 
 - **Rutas Dinámicas:** Las rutas se configuran dinámicamente basándose en la estructura de exportación de los paquetes, facilitando su uso.
 
@@ -65,7 +65,7 @@ Una vez que hayas configurado tu servidor, puedes importar tus módulos directam
 
 ## Contribución
 
-Si deseas contribuir a Moduler, por favor envía un pull request o abre un issue.
+Si deseas contribuir a SIO-Moduler, por favor envía un pull request o abre un issue.
 
 ## Autor
 
