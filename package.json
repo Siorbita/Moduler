@@ -1,0 +1,17 @@
+{
+  "name": "moduler",
+  "version": "1.0.0",
+  "description": "Make public any node_modules package",
+  "main": "moduler.js",
+  "scripts": {},
+  "keywords": [
+    "node_modules",
+    "public",
+    "browser"
+  ],
+  "author": "Siorbita",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.1"
+  }
+}
