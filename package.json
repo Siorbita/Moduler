@@ -1,6 +1,6 @@
 {
-  "name": "moduler",
-  "version": "1.0.0",
+  "name": "sio-moduler",
+  "version": "1.0.1",
   "description": "Make public any node_modules package",
   "main": "moduler.js",
   "scripts": {},
@@ -13,5 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.1"
+  },
+  "git": {
+    "url": "https://github.com/Siorbita/SioModuler"
   }
 }
