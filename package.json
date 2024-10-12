@@ -1,6 +1,6 @@
 {
   "name": "sio-moduler",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Make public any node_modules package",
   "main": "moduler.js",
   "scripts": {},

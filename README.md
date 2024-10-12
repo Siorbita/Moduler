@@ -2,75 +2,77 @@
 
 ![License](https://img.shields.io/badge/license-ISC-brightgreen)
 
-**SIO-Moduler** es un paquete para Node.js que permite hacer públicos cualquier paquete de `node_modules` y sirve como un middleware en aplicaciones Express. Esto es útil para facilitar la importación de módulos en el navegador.
+Ver la [versión en español](README.es.md)
 
-SIO-Moduler usa la propiedad exports de los paquetes para generar las rutas que serán utilizadas, en caso de que no exista esta propiedad, se genera usando la propiedad module o la propiedad main, por último si no existe ningúna de estas busca la existencia del archivo "index.js" en el proyecto.
+**SIO-Moduler** is a package for Node.js that allows you to expose any package from `node_modules` and acts as middleware in Express applications. This is useful for facilitating the import of modules in the browser.
 
-## Instalación
+SIO-Moduler uses the exports property of packages to generate the routes that will be used; if this property does not exist, it generates them using the module or main property; finally, if none of these exist, it looks for the existence of the "index.js" file in the project.
 
-Puedes instalar SIO-Moduler a través de npm:
+## Installation
+
+You can install SIO-Moduler via npm:
 
 ```bash
 npm install sio-moduler
 ```
 
-## Uso
+## Usage
 
-Una vez instalado, puedes utilizar Moduler en tu aplicación Express de la siguiente manera:
+Once installed, you can use Moduler in your Express application like this:
 
 ```javascript
 import express from 'express';
 import moduler from 'sio-moduler';
 
 const app = express();
-const modules = ['nombre-del-modulo']; // Reemplaza por los módulos que quieres exponer
+const modules = ['module-name']; // Replace with the modules you want to expose
 
-// Utiliza el middleware SIO-Moduler
+// Use SIO-Moduler middleware
 app.use('/modules', moduler(modules));
 
-// Inicia el servidor
+// Start the server
 app.listen(3000, () => {
-  console.log('Servidor corriendo en el puerto 3000');
+  console.log('Server running on port 3000');
 });
 ```
 
-### Importación de Módulos desde el Navegador
+### Importing Modules from the Browser
 
-Una vez que hayas configurado tu servidor, puedes importar tus módulos directamente desde el navegador utilizando etiquetas `<script>`. Por ejemplo, si expusiste un módulo llamado `nombre-del-modulo`, puedes importarlo de la siguiente manera:
+Once you have set up your server, you can import your modules directly from the browser using `<script>` tags. For example, if you exposed a module named `module-name`, you can import it like this:
 
 ```html
 <script type="module">
-  import { algo } from '/modules/nombre-del-moduloS';
+  import { something } from '/modules/module-name';
   
-  // Usa 'algo' en tu código
-  algo();
+  // Use 'something' in your code
+  something();
 </script>
 ```
 
-### Funcionalidades
+### Features
 
-- **Importación de Módulos:** SIO-Moduler redefine las rutas de importación para los archivos que se importan desde `node_modules`, permitiendo que sean accesibles desde el navegador.
+- **Module Import:** SIO-Moduler redefines the import paths for files being imported from `node_modules`, making them accessible from the browser.
   
-- **Soporte para Dependencias:** SIO-Moduler también maneja las dependencias de tus módulos y las hace accesibles automáticamente.
+- **Dependency Support:** SIO-Moduler also manages your module dependencies and makes them accessible automatically.
+  
+- **Dynamic Routes:** Routes are configured dynamically based on the export structure of the packages, facilitating their use.
 
-- **Rutas Dinámicas:** Las rutas se configuran dinámicamente basándose en la estructura de exportación de los paquetes, facilitando su uso.
+## Keywords
 
-## Palabras Clave
-
-- node_modules
-- public
-- browser
-- middleware
+- node_modules  
+- public  
+- browser  
+- middleware  
 - express
 
-## Contribución
+## Contribution
 
-Si deseas contribuir a SIO-Moduler, por favor envía un pull request o abre un issue.
+If you wish to contribute to SIO-Moduler, please submit a pull request or open an issue.
 
-## Autor
+## Author
 
 **Siorbita:** Adrián Mercado Martínez
 
-## Licencia
+## License
 
-Este proyecto está bajo la licencia ISC. Para más detalles, consulta el archivo LICENSE.
+This project is licensed under the ISC license. For more details, please see the LICENSE file.
