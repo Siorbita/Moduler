@@ -1,9 +1,29 @@
 import express from "express"
 import fs from "node:fs"
 import { dirname } from "node:path"
+import path from "node:path"
 const __dirname = process.cwd()
 let globalModules = []
-const cleanImports = (fileData, moduleName) => {
+const cleanExports = (fileData, moduleName, modulePath) => {
+  const parts = modulePath.split("/")
+  if (parts[parts.length - 1].endsWith(".js")) {
+    parts.pop()
+  }
+  const regex2 = /export(.*)\s+from\s+\"(.*)\"/gm
+  let m
+  while ((m = regex2.exec(fileData)) !== null) {
+    if (m[2].startsWith(".")) {
+      const fullPath = path.dirname(modulePath)
+      const realPath = path.normalize(`${fullPath}/${m[2]}`)
+      const rootPath = realPath.split("node_modules").pop().replaceAll(/\\/g, "/").replace(/^\//g, "")
+      fileData = fileData.replace(m[0], `export ${m[1]} from "/modules/${rootPath}"`)
+    } else {
+      fileData = fileData.replace(m[0], `export ${m[1]} from "/modules/${m[2]}"`)
+    }
+  }
+  return fileData
+}
+const cleanImports = (fileData, moduleName, modulePath) => {
   const directImportRegex = /import[ \n\t]*['"]([^'"\n]+)['"]/gm
   let m
   while ((m = directImportRegex.exec(fileData)) !== null) {
@@ -14,59 +34,93 @@ const cleanImports = (fileData, moduleName) => {
     fileData = fileData.replace(m[0], `import "/modules/${m[1]}"`)
   }
 
-  const regex = /import(?:(?:(?:[ \n\t]+([^ *\n\t\{\},]+)[ \n\t]*(?:,|[ \n\t]+))?([ \n\t]*\{(?:[ \n\t]*[^ \n\t"'\{\}]+[ \n\t]*,?)+\})?[ \n\t]*)|[ \n\t]*\*[ \n\t]*as[ \n\t]+([^ \n\t\{\}]+)[ \n\t]+)from[ \n\t]*(?:['"])([^'"\n]+)(['"])/gm
+  const regex = /import\s+(.*)\s+from\s+"(.*)"/gm
 
   while ((m = regex.exec(fileData)) !== null) {
-    // This is necessary to avoid infinite loops with zero-width matches
     if (m.index === regex.lastIndex) {
       regex.lastIndex++
     }
-    // The result can be accessed through the `m`-variable.
-    if (m[4].startsWith(".")) continue
-    if (!m[1] && !m[2]) {
-      fileData = fileData.replace(m[0], `import "/modules/${m[4]}"`)
+    if (m[2].startsWith(".")) {
+      const fullPath = path.dirname(modulePath)
+      const realPath = path.normalize(`${fullPath}/${m[2]}`)
+      const rootPath = realPath.split("node_modules").pop().replaceAll(/\\/g, "/").replace(/^\//g, "")
+      fileData = fileData.replace(m[0], `import ${m[1]} from "/modules/${rootPath}"`)
     } else {
-      fileData = fileData.replace(m[0], `import ${m[2] || m[1]} from "/modules/${m[4]}"`)
+      fileData = fileData.replace(m[0], `import ${m[1]} from "/modules/${m[2]}"`)
     }
   }
-  return fileData
+  return cleanExports(fileData, moduleName, modulePath)
+}
+const isDirectory = (path) => {
+  const stats = fs.statSync(path)
+  return stats.isDirectory()
+}
+const findAndReturnCorrectPath = (moduleName, modulePath, cleanUrl) => {
+  modulePath = modulePath.replace(/^\./, "")
+  const finalPath = path.normalize(`${__dirname}/node_modules/${moduleName}${cleanUrl}`)
+  const finalPathWithExtension = `${finalPath}.js`
+  const finalModulePath = path.normalize(`${__dirname}/node_modules/${moduleName}${modulePath}${cleanUrl}`)
+  const finalModulePathWithExtension = `${finalModulePath}.js`
+  const finalIndex = path.normalize(`${finalPath}/index.js`)
+  if (fs.existsSync(finalPath) && !isDirectory(finalPath)) {
+    return finalPath
+  } else if (fs.existsSync(finalPathWithExtension) && !isDirectory(finalPathWithExtension)) {
+    return finalPathWithExtension
+  } else if (fs.existsSync(finalModulePath) && !isDirectory(finalModulePath)) {
+    return finalModulePath
+  } else if (fs.existsSync(finalModulePathWithExtension) && !isDirectory(finalModulePathWithExtension)) {
+    return finalModulePathWithExtension
+  } else if (fs.existsSync(finalIndex) && !isDirectory(finalIndex)) {
+    return finalIndex
+  }
+  console.log("Error findAndReturnCorrectPath", {
+    moduleName,
+    modulePath,
+    cleanUrl,
+    finalPath,
+    finalPathWithExtension,
+    finalModulePath,
+    finalModulePathWithExtension,
+    finalIndex
+  })
+  return null
 }
 const fileResponse = (moduleName, modulePath) => {
   return (req, res) => {
     const finalPart = req.url.replace(/^\//, "").replace(/\.\.\//g, "").replace(/^\./, "")
     const finalModulePath = `${modulePath}${finalPart}`
-    const finalPath = `${__dirname}/node_modules/${moduleName}/${finalModulePath}`
-    const exists = fs.existsSync(`${finalPath}`)
-    if (!exists) {
-      return res.send(`Path ${finalModulePath} not found in module ${moduleName}`)
+    const pathExists = findAndReturnCorrectPath(moduleName, modulePath, finalPart)
+    if (!pathExists) {
+      console.log("Error fileReponse", { moduleName, modulePath, finalPart })
+      return res.send(`Path for file ${finalModulePath} not found in module ${moduleName}`)
     }
-    const fileData = fs.readFileSync(`${finalPath}`, "utf-8")
+    const fileData = fs.readFileSync(`${pathExists}`, "utf-8")
     res.header("Content-Type", "application/javascript")
-    res.send(cleanImports(fileData, moduleName))
+    res.send(cleanImports(fileData, moduleName, pathExists))
   }
 }
 const directoryResponse = (moduleName, modulePath) => {
   return (req, res, next) => {
     let cleanUrl = req.url.replace(/\.\.\//g, "").replace(/^\//, "").replace(/^\./, "")
     if (!cleanUrl.startsWith("/")) cleanUrl = `/${cleanUrl}`
-    const finalPart = `${modulePath}${cleanUrl}`
-    const finalPath = `${__dirname}/node_modules/${moduleName}${finalPart}`
-    const pathExists = fs.existsSync(`${finalPath}`)
+    const finalPart = `${cleanUrl}`
+    const pathExists = findAndReturnCorrectPath(moduleName, modulePath, cleanUrl)
     if (!pathExists) {
-      return res.send(`Path ${finalPart} not found in module ${moduleName}`)
+      console.log(moduleName, modulePath, cleanUrl)
+      return res.send(`Path for directory ${finalPart} not found in module ${moduleName}`)
     }
-    const stats = fs.statSync(`${finalPath}`)
+    const stats = fs.statSync(`${pathExists}`)
     let fileData = null
     if (stats.isDirectory()) {
-      const indexExists = fs.existsSync(`${finalPath}/index.js`)
+      const indexExists = fs.existsSync(`${pathExists}/index.js`)
       if (indexExists) {
-        fileData = fs.readFileSync(`${finalPath}/index.js`, "utf-8")
+        fileData = fs.readFileSync(`${pathExists}/index.js`, "utf-8")
       }
     } else {
-      fileData = fs.readFileSync(`${finalPath}`, "utf-8")
+      fileData = fs.readFileSync(`${pathExists}`, "utf-8")
     }
     res.header("Content-Type", "application/javascript")
-    fileData = cleanImports(fileData, moduleName)
+    fileData = cleanImports(fileData, moduleName, pathExists)
     res.send(fileData)
   }
 }
