@@ -56,9 +56,15 @@ const isDirectory = (path) => {
   return stats.isDirectory()
 }
 const findAndReturnCorrectPath = (moduleName, modulePath, cleanUrl) => {
+  if (modulePath.trim() === "/") {
+    const packageJson = getPackageJson(moduleName)
+    const main = packageJson.module || packageJson.main || "index.js"
+    modulePath = main.replace(/^\./, "")
+  }
   modulePath = modulePath.replace(/^\./, "")
   const finalPath = path.normalize(`${__dirname}/node_modules/${moduleName}${cleanUrl}`)
   const finalPathWithExtension = `${finalPath}.js`
+  if (!modulePath.startsWith("/")) { modulePath = `/${modulePath}` }
   const finalModulePath = path.normalize(`${__dirname}/node_modules/${moduleName}${modulePath}${cleanUrl}`)
   const finalModulePathWithExtension = `${finalModulePath}.js`
   const finalIndex = path.normalize(`${finalPath}/index.js`)
@@ -92,7 +98,7 @@ const fileResponse = (moduleName, modulePath) => {
     const pathExists = findAndReturnCorrectPath(moduleName, modulePath, finalPart)
     if (!pathExists) {
       console.log("Error fileReponse", { moduleName, modulePath, finalPart })
-      return res.send(`Path for file ${finalModulePath} not found in module ${moduleName}`)
+      return res.code(404).send(`Path for file ${finalModulePath} not found in module ${moduleName}`)
     }
     const fileData = fs.readFileSync(`${pathExists}`, "utf-8")
     res.header("Content-Type", "application/javascript")
@@ -106,8 +112,8 @@ const directoryResponse = (moduleName, modulePath) => {
     const finalPart = `${cleanUrl}`
     const pathExists = findAndReturnCorrectPath(moduleName, modulePath, cleanUrl)
     if (!pathExists) {
-      console.log(moduleName, modulePath, cleanUrl)
-      return res.send(`Path for directory ${finalPart} not found in module ${moduleName}`)
+      console.log("Error directoryResponse", moduleName, modulePath, cleanUrl)
+      return res.code(404).send(`Path for directory ${finalPart} not found in module ${moduleName}`)
     }
     const stats = fs.statSync(`${pathExists}`)
     let fileData = null
